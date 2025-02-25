@@ -26,7 +26,7 @@ export default function Navbar() {
           <DropdownMenuContent side="bottom">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem>Shadwar Nayyar</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setOpen(true)}>
               Logout
             </DropdownMenuItem>
