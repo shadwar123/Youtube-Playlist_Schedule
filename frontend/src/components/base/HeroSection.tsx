@@ -14,7 +14,7 @@ export default function HeroSection() {
           YFSA
         </h1> */}
         <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
-          Starter Package for Full stack projects.
+            Youtube Playlist Task Scheduler.
         </p>
         <Link href="/login">
           <Button className=" mt-4 text-lg">Start free</Button>
