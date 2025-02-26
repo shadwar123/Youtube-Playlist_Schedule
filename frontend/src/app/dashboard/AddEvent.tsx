@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 interface AddEventProps {
   eventListData: string[];
+  playlistUrl: string;
+  selectedTime: string;
 }
 
-export const AddEvent: React.FC<AddEventProps> = ({ eventListData }) => {
+export const AddEvent: React.FC<AddEventProps> = ({ eventListData, playlistUrl, selectedTime }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [expiresIn, setExpiresIn] = useState<string | null>(null);
   const [isApiLoaded, setIsApiLoaded] = useState(false);
@@ -73,11 +75,12 @@ export const AddEvent: React.FC<AddEventProps> = ({ eventListData }) => {
   };
 
   function handleAuthClick() {
+    console.error('Calender auth inside')
     if (!isApiLoaded) {
       console.error('Google APIs not loaded');
       return;
     }
-
+    console.error('Calender auth inside 2')
     const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPES,
@@ -191,28 +194,76 @@ export const AddEvent: React.FC<AddEventProps> = ({ eventListData }) => {
   //   }
   // }
 
+  // async function addMultipleEvents() {
+  //   if (!isApiLoaded) {
+  //     console.error('Google Calendar API not loaded');
+  //     return;
+  //   }
+
+  //   try {
+  //     for (let i = 0; i < eventListData.length; i++) {
+  //       const eventDate = new Date();
+  //       eventDate.setDate(eventDate.getDate() + i);
+
+  //       const event = {
+  //         'kind': 'calendar#event',
+  //         'summary': `Day ${i + 1}`,
+  //         'location': `${playlistUrl}`,
+  //         'description': eventListData[i],
+  //         'start': {
+  //           'dateTime': selectedTime,
+  //           'timeZone': 'UTC'
+  //         },
+  //         'reminders': {
+  //           'useDefault': true,
+  //         },
+  //         "guestsCanSeeOtherGuests": true,
+  //       };
+
+  //       const response = await (window as any).gapi.client.calendar.events.insert({
+  //         'calendarId': 'primary',
+  //         'resource': event,
+  //         'sendUpdates': 'all'
+  //       });
+
+  //       console.log(`Event ${i + 1} added:`, response);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error adding events:', error);
+  //   }
+  // }
+
   async function addMultipleEvents() {
     if (!isApiLoaded) {
       console.error('Google Calendar API not loaded');
       return;
     }
-
+  
     try {
       for (let i = 0; i < eventListData.length; i++) {
         const eventDate = new Date();
         eventDate.setDate(eventDate.getDate() + i);
-
+  
+        // Create a new Date object for the event start time
+        const [hours, minutes] = selectedTime.split(':').map(Number); // Split selectedTime into hours and minutes
+        const eventStartTime = new Date(eventDate);
+        eventStartTime.setHours(hours, minutes); // Set hours and minutes from selectedTime
+  
+        // Create an end time that is one hour after the start time
+        const eventEndTime = new Date(eventStartTime);
+        eventEndTime.setHours(eventEndTime.getHours() + 1); // Add one hour to start time
+  
         const event = {
           'kind': 'calendar#event',
           'summary': `Day ${i + 1}`,
-          'location': 'Offline',
+          'location': `${playlistUrl}`,
           'description': eventListData[i],
           'start': {
-            'dateTime': eventDate.toISOString(),
+            'dateTime': eventStartTime.toISOString(), // Use the ISO string for the start time
             'timeZone': 'UTC'
           },
           'end': {
-            'dateTime': eventDate.toISOString(),
+            'dateTime': eventEndTime.toISOString(), // Use the ISO string for the end time
             'timeZone': 'UTC'
           },
           'reminders': {
@@ -220,27 +271,29 @@ export const AddEvent: React.FC<AddEventProps> = ({ eventListData }) => {
           },
           "guestsCanSeeOtherGuests": true,
         };
-
+  
         const response = await (window as any).gapi.client.calendar.events.insert({
           'calendarId': 'primary',
           'resource': event,
           'sendUpdates': 'all'
         });
-
+  
         console.log(`Event ${i + 1} added:`, response);
       }
     } catch (error) {
       console.error('Error adding events:', error);
     }
   }
+  
 
+  
   return (
     <div className='flex justify-end gap-3 mt-2 mb-2'>
       <button 
         id="authorize_button" 
         className='bg-black text-white px-3 py-2 rounded-md'
         disabled={!isApiLoaded}
-        hidden={!!accessToken && !!expiresIn} 
+        // hidden={!!accessToken && !!expiresIn} 
         onClick={handleAuthClick}
       >
         Authorize

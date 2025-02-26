@@ -20,8 +20,6 @@ interface VideoData {
   vidLength: string;
 }
 
-
-
 export default function Home() {
   const [playlistUrl, setPlaylistUrl] = useState("");
   const [videoData, setVideoData] = useState<VideoData[]>([]);
@@ -33,12 +31,12 @@ export default function Home() {
   const [experienceLevel, setExperienceLevel] = useState<
     "Beginner" | "Intermediate"
   >("Beginner");
-  const [dailyLearningHours, setDailyLearningHours] = useState<number>(2); 
+  const [dailyLearningHours, setDailyLearningHours] = useState<number>(2);
+  const [selectedTime, setSelectedTime] = useState<string>("");
 
   useEffect(() => {
-    console.log("Generated content:", arrayData[0]);
+    console.log("data Generated content:", arrayData[0]);
   }, [arrayData]);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,14 +69,14 @@ export default function Home() {
   };
 
   const run = async (videoData: VideoData[]): Promise<void> => {
-    console.log("inside run gemini")
+    console.log("inside run gemini");
     setLoading(true); // Set loading to true before calling API
 
     try {
       const genAI = new GoogleGenerativeAI(
         process.env.NEXT_PUBLIC_GEMINI_API_KEY || ""
       );
-  
+
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       // Construct the prompt using the playlist data, experience level, and daily learning hours
@@ -110,7 +108,7 @@ Ensure the total viewing time does not exceed my daily learning hours and adjust
 
       // Assuming `result.response.text()` is the correct way to get the response
       const generatedText: string = await result.response.text(); // Specify the type for generatedText
-      console.log("direct data 1", generatedText);
+      console.log("data generatedText", generatedText);
       // Process the generated text to extract lines starting with "Day"
       setTimeout(() => {
         const extractedData = generatedText
@@ -118,7 +116,7 @@ Ensure the total viewing time does not exceed my daily learning hours and adjust
           .map((line) => line.trim())
           .filter((line) => line.startsWith("Day")); // Only process lines starting with "Day"
 
-        console.log("direct data 22", extractedData);
+        console.log("data extractedData", extractedData);
         setArrayData(extractedData); // Update state
         setLoading(false); // Set loading to false when done
       }, 1000); // Process in chunks after slight delay
@@ -137,10 +135,8 @@ Ensure the total viewing time does not exceed my daily learning hours and adjust
     }
   };
 
-
   return (
     <div className="container mx-auto p-4">
-      
       <Card>
         <CardHeader>
           <CardTitle>YouTube Playlist Task Planner</CardTitle>
@@ -180,12 +176,22 @@ Ensure the total viewing time does not exceed my daily learning hours and adjust
                   }
                   className="border p-2 rounded"
                 >
-                  <option value={1}>1 hour</option>
-                  <option value={2}>2 hours</option>
-                  <option value={3}>3 hours</option>
-                  <option value={4}>4 hours</option>
-                  <option value={5}>5 hours</option>
+                  <option value={1}>20% Efficiency</option>
+                  <option value={2}>40% Efficiency</option>
+                  <option value={3}>60% Efficiency</option>
+                  <option value={4}>80% Efficiency</option>
+                  <option value={5}>100% Efficiency</option>
                 </select>
+                {/* Time Selector */}
+                <div className="border px-1 py-2 rounded">
+                  <label className="mr-1 font-normal">Start Time:</label>
+                  <input
+                    type="time"
+                    value={selectedTime}
+                    onChange={(e) => setSelectedTime(e.target.value)}
+                    className="border p-0 rounded"
+                  />
+                </div>
               </div>
 
               <Button type="submit" disabled={loading}>
@@ -230,7 +236,7 @@ Ensure the total viewing time does not exceed my daily learning hours and adjust
 
           <Card>
             <CardContent>
-              <AddEvent eventListData={arrayData}/>
+              <AddEvent eventListData={arrayData} playlistUrl={playlistUrl} selectedTime={selectedTime} />
               <div>
                 {loading ? ( // Show loading state while data is being fetched/processed
                   <p>Loading...</p>
