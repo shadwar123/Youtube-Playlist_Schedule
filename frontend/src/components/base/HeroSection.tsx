@@ -2,8 +2,16 @@ import React from "react";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  authOptions,
+  CustomSession,
+} from "../../app/api/auth/[...nextauth]/options";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
-export default function HeroSection() {
+export default async function HeroSection() {
+  const session: CustomSession | null = await getServerSession(authOptions);
+
   return (
     <div className="w-full h-screen flex justify-center flex-col">
       <div className="flex justify-center items-center ">
@@ -14,11 +22,18 @@ export default function HeroSection() {
           YFSA
         </h1> */}
         <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
-            Youtube Playlist Task Scheduler.
+          Youtube Playlist Task Scheduler.
         </p>
-        <Link href="/login">
-          <Button className=" mt-4 text-lg">Start free</Button>
-        </Link>
+        {session ? (
+          <Link href="/dashboard">
+            <Button className=" mt-4 text-lg">Start free</Button>
+          </Link>
+        ) : (
+          <Link href="/login">
+            <Button className=" mt-4 text-lg">Start free</Button>
+          </Link>
+        )}
+        
       </div>
     </div>
   );

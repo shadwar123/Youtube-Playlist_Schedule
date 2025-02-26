@@ -19,7 +19,7 @@ export default async function login() {
       <div className="w-full md:w-[550px] shadow-md rounded-xl py-5 px-10 bg-white">
         <div>
           <h1 className="text-4xl text-center font-extrabold bg-gradient-to-r from-pink-400 to-purple-500 text-transparent bg-clip-text">
-            Clash
+            Shadow
           </h1>
           <h1 className="text-3xl font-bold">Login</h1>
           <p>Welcome back</p>
