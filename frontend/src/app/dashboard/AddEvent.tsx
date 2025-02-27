@@ -182,59 +182,137 @@ export const AddEvent: React.FC<AddEventProps> = ({
     }
   }
 
+  // async function addMultipleEvents() {
+  //   if (!isApiLoaded) {
+  //     console.error("Google Calendar API not loaded");
+  //     return;
+  //   }
+
+  //   try {
+  //     for (let i = 0; i < eventListData.length; i++) {
+  //       const eventDate = new Date();
+  //       eventDate.setDate(eventDate.getDate() + i);
+
+  //       // Create a new Date object for the event start time
+  //       const [hours, minutes] = selectedTime.split(":").map(Number);
+  //       const eventStartTime = new Date(eventDate);
+  //       eventStartTime.setHours(hours, minutes);
+
+  //       // Create an end time that is one hour after the start time
+  //       const eventEndTime = new Date(eventStartTime);
+  //       eventEndTime.setHours(eventEndTime.getHours() + 1);
+  //       console.log("time",eventStartTime)
+  //       const event = {
+  //         kind: "calendar#event",
+  //         summary: `Day ${i + 1}`,
+  //         location: `${playlistUrl}`,
+  //         description: eventListData[i],
+  //         start: {
+  //           dateTime: eventStartTime.toISOString(),
+  //           timeZone: "UTC",
+  //         },
+  //         end: {
+  //           dateTime: eventEndTime.toISOString(),
+  //           timeZone: "UTC",
+  //         },
+  //         reminders: {
+  //           useDefault: true,
+  //         },
+  //         guestsCanSeeOtherGuests: true,
+  //       };
+
+  //       const response = await (
+  //         window as any
+  //       ).gapi.client.calendar.events.insert({
+  //         calendarId: "primary",
+  //         resource: event,
+  //         sendUpdates: "all",
+  //       });
+
+  //       console.log(`Event ${i + 1} added:`, response);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error adding events:", error);
+  //   }
+  // }
+
+
+
   async function addMultipleEvents() {
     if (!isApiLoaded) {
-      console.error("Google Calendar API not loaded");
-      return;
+        console.error("Google Calendar API not loaded");
+        return;
     }
 
     try {
-      for (let i = 0; i < eventListData.length; i++) {
-        const eventDate = new Date();
-        eventDate.setDate(eventDate.getDate() + i);
+        for (let i = 0; i < eventListData.length; i++) {
+            const today = new Date();
+            today.setDate(today.getDate() + i);
+            // Extract hours and minutes from input field (HH:MM format)
+            const [hours, minutes] = selectedTime.split(":").map(Number);
 
-        // Create a new Date object for the event start time
-        const [hours, minutes] = selectedTime.split(":").map(Number);
-        const eventStartTime = new Date(eventDate);
-        eventStartTime.setHours(hours, minutes);
+            // 🔹 Create a valid UTC Date (Prevents JS month indexing issues)
+            let eventStartTime = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes);
+            
+            if (isNaN(eventStartTime.getTime())) {
+                console.error("❌ Invalid eventStartTime:", eventStartTime);
+                return;
+            }
 
-        // Create an end time that is one hour after the start time
-        const eventEndTime = new Date(eventStartTime);
-        eventEndTime.setHours(eventEndTime.getHours() + 1);
+            // ✅ First, convert to UTC ISO String
+            let utcISOString = eventStartTime.toISOString();
 
-        const event = {
-          kind: "calendar#event",
-          summary: `Day ${i + 1}`,
-          location: `${playlistUrl}`,
-          description: eventListData[i],
-          start: {
-            dateTime: eventStartTime.toISOString(),
-            timeZone: "UTC",
-          },
-          end: {
-            dateTime: eventEndTime.toISOString(),
-            timeZone: "UTC",
-          },
-          reminders: {
-            useDefault: true,
-          },
-          guestsCanSeeOtherGuests: true,
-        };
+            // ✅ Create a new Date from UTC ISO (Fixing timezone issues)
+            let correctedStartTime = new Date(utcISOString);
+            correctedStartTime.setMinutes(correctedStartTime.getMinutes() + 330); // Add 5:30 hours
 
-        const response = await (
-          window as any
-        ).gapi.client.calendar.events.insert({
-          calendarId: "primary",
-          resource: event,
-          sendUpdates: "all",
-        });
+            // ✅ Set End Time (1 hour later)
+            let correctedEndTime = new Date(correctedStartTime);
+            correctedEndTime.setHours(correctedEndTime.getHours() + 1);
 
-        console.log(`Event ${i + 1} added:`, response);
-      }
+            // ✅ Convert to ISO format without "Z" (Google Calendar requires local time)
+            const formattedStartTime = correctedStartTime.toISOString().replace("Z", "");
+            const formattedEndTime = correctedEndTime.toISOString().replace("Z", "");
+
+            console.log("✅ Final Start Time (Adjusted IST):", formattedStartTime);
+            console.log("✅ Final End Time (Adjusted IST):", formattedEndTime);
+
+            // Google Calendar Event Object
+            const event = {
+                summary: `Day ${i + 1}`,
+                location: playlistUrl,
+                description: eventListData[i],
+                start: {
+                    dateTime: formattedStartTime,
+                    timeZone: "UTC",
+                },
+                end: {
+                    dateTime: formattedEndTime,
+                    timeZone: "UTC",
+                },
+                reminders: {
+                    useDefault: true,
+                },
+                guestsCanSeeOtherGuests: true,
+            };
+
+            // Insert event into Google Calendar
+            const response = await (window as any).gapi.client.calendar.events.insert({
+                calendarId: "primary",
+                resource: event,
+                sendUpdates: "all",
+            });
+
+            console.log(`✅ Event ${i + 1} added successfully:`, response);
+        }
     } catch (error) {
-      console.error("Error adding events:", error);
+        console.error("❌ Error adding events:", error);
     }
-  }
+}
+
+
+
+
 
   return (
     <div className="flex justify-end gap-3 mt-2 mb-2">
