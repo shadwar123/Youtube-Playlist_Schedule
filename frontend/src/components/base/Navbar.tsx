@@ -10,8 +10,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import UserAvatar from "./UserAvatar";
 import LogoutModal from "../auth/LogoutModal";
-export default function Navbar() {
+
+interface NavbarProps {
+  session: any;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ session }) =>{
   const [open, setOpen] = useState(false);
+
+  console.log("session",session.user.name)
   return (
     <>
       <LogoutModal open={open} setOpen={setOpen} />
@@ -26,7 +33,7 @@ export default function Navbar() {
           <DropdownMenuContent side="bottom">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Shadwar Nayyar</DropdownMenuItem>
+            <DropdownMenuItem>{session.user.name}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setOpen(true)}>
               Logout
             </DropdownMenuItem>
@@ -36,3 +43,4 @@ export default function Navbar() {
     </>
   );
 }
+export default Navbar;

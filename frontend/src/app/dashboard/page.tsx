@@ -5,6 +5,7 @@ import { authOptions, CustomSession } from "../api/auth/[...nextauth]/options";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Home from "./Home";
+
 // import { fetchClashs } from "../fetch/clashFetch";
 // import ClashCard from "@/components/clash/ClashCard";
 
@@ -18,7 +19,7 @@ export default async function dashboard() {
   }
   return (
     <div className="container">
-      <Navbar />
+      <Navbar session={session}/>
       <Home/>
     </div>
   );
