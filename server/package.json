@@ -18,10 +18,12 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.2.1",
+    "axios": "^1.8.3",
     "bcrypt": "^5.1.1",
     "concurrently": "^9.1.2",
     "copyfiles": "^2.4.1",
     "cors": "^2.8.5",
+    "cron": "^4.1.0",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
