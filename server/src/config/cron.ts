@@ -1,7 +1,7 @@
 import { CronJob } from "cron";
 import axios from "axios";
 
-const PING_URL = "https://full-stack-server-j2k9.onrender.com";
+const PING_URL = "https://youtube-playlist-schedule-backend.onrender.com";
 
 export const job = new CronJob(
   "*/14 * * * *", // Runs every 14 minutes
