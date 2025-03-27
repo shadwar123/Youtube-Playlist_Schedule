@@ -19,26 +19,27 @@ router.post("/login", authLimiter, async (req, res) => {
             where: { email: payload.email },
         });
         if (!user) {
-            return res
-                .status(404)
-                .json({ message: "No user found with this email." });
+            res.status(404).json({ message: "No user found with this email." });
+            return;
         }
         // * Check email verified or not
         if (user.email_verified_at === null) {
-            return res.status(422).json({
+            res.status(422).json({
                 errors: {
                     email: "Email is not verified yet.please check your email and verify your email.",
                 },
             });
+            return;
         }
         // Check password
         const compare = await bcrypt.compare(payload.password, user.password);
         if (!compare) {
-            return res.status(422).json({
+            res.status(422).json({
                 errors: {
                     email: "Invalid Credentials.",
                 },
             });
+            return;
         }
         const JWTPayload = {
             id: user.id,
@@ -54,7 +55,7 @@ router.post("/login", authLimiter, async (req, res) => {
             name: user.name,
             token: `Bearer ${token}`,
         };
-        return res.json({
+        res.json({
             message: "Logged in successfully!",
             data: resPayload,
         });
@@ -62,11 +63,10 @@ router.post("/login", authLimiter, async (req, res) => {
     catch (error) {
         if (error instanceof ZodError) {
             const errors = formatError(error);
-            // Send a 422 response for validation errors
-            return res.status(422).json({ message: "Invalid data", errors });
+            res.status(422).json({ message: "Invalid data", errors });
+            return;
         }
-        // Send a 500 response for all other errors
-        return res.status(500).json({ message: "Something went wrong" });
+        res.status(500).json({ message: "Something went wrong" });
     }
 });
 router.post("/check/login", authLimiter, async (req, res) => {
@@ -78,29 +78,32 @@ router.post("/check/login", authLimiter, async (req, res) => {
             where: { email: payload.email },
         });
         if (!user) {
-            return res.status(422).json({
+            res.status(422).json({
                 errors: {
                     email: "No user found with this email.",
                 },
             });
+            return;
         }
         // * Check email verified or not
         if (user.email_verified_at === null) {
-            return res.status(422).json({
+            res.status(422).json({
                 errors: {
                     email: "Email is not verified yet.please check your email and verify your email.",
                 },
             });
+            return;
         }
         // Check password
         if (!bcrypt.compareSync(payload.password, user.password)) {
-            return res.status(422).json({
+            res.status(422).json({
                 errors: {
                     email: "Invalid Credentials.",
                 },
             });
+            return;
         }
-        return res.json({
+        res.json({
             message: "Logged in successfully!",
             data: null,
         });
@@ -108,11 +111,10 @@ router.post("/check/login", authLimiter, async (req, res) => {
     catch (error) {
         if (error instanceof ZodError) {
             const errors = formatError(error);
-            // Send a 422 response for validation errors
-            return res.status(422).json({ message: "Invalid data", errors });
+            res.status(422).json({ message: "Invalid data", errors });
+            return;
         }
-        // Send a 500 response for all other errors
-        return res.status(500).json({ message: "Something went wrong" });
+        res.status(500).json({ message: "Something went wrong" });
     }
 });
 router.post("/register", authLimiter, async (req, res) => {
@@ -123,11 +125,12 @@ router.post("/register", authLimiter, async (req, res) => {
             where: { email: payload.email },
         });
         if (user) {
-            return res.status(422).json({
+            res.status(422).json({
                 errors: {
                     email: "Email already taken.please use another one.",
                 },
             });
+            return;
         }
         //   * Encrypt the password
         const salt = await bcrypt.genSalt(10);
@@ -147,16 +150,15 @@ router.post("/register", authLimiter, async (req, res) => {
                 email_verify_token: token
             },
         });
-        return res.json({ message: "User created successfully!" });
+        res.json({ message: "User created successfully!" });
     }
     catch (error) {
         if (error instanceof ZodError) {
             const errors = formatError(error);
-            // Send a 422 response for validation errors
-            return res.status(422).json({ message: "Invalid data", errors });
+            res.status(422).json({ message: "Invalid data", errors });
+            return;
         }
-        // Send a 500 response for all other errors
-        return res.status(500).json({ message: "Something went wrong" });
+        res.status(500).json({ message: "Something went wrong" });
     }
 });
 // * Forget password
@@ -168,12 +170,13 @@ router.post("/forget-password", authLimiter, async (req, res) => {
             where: { email: payload.email },
         });
         if (!user) {
-            return res.status(422).json({
+            res.status(422).json({
                 message: "Invalid data",
                 errors: {
                     email: "No Account found with this email!",
                 },
             });
+            return;
         }
         const salt = await bcrypt.genSalt(10);
         const token = await bcrypt.hash(uuid4(), salt);
@@ -192,23 +195,17 @@ router.post("/forget-password", authLimiter, async (req, res) => {
             url: url,
         });
         await sendMail(`${payload.email}`, "Reset password Password", `${html}`);
-        // await emailQueue.add(emailQueueName, {
-        //   to: payload.email,
-        //   subject: "Forgot Password",
-        //   html: html,
-        // });
-        return res.json({
+        res.json({
             message: "Email sent successfully!! please check your email.",
         });
     }
     catch (error) {
         if (error instanceof ZodError) {
             const errors = formatError(error);
-            // Send a 422 response for validation errors
-            return res.status(422).json({ message: "Invalid data", errors });
+            res.status(422).json({ message: "Invalid data", errors });
+            return;
         }
-        // Send a 500 response for all other errors
-        return res.status(500).json({ message: "Something went wrong" });
+        res.status(500).json({ message: "Something went wrong" });
     }
 });
 // *Reset Password routes
@@ -217,64 +214,77 @@ router.post("/reset-password", authLimiter, async (req, res) => {
         const body = req.body;
         const payload = resetPasswordSchema.parse(body);
         const user = await prisma.user.findUnique({
-            select: {
-                email: true,
-                password_reset_token: true,
-                token_send_at: true,
-            },
             where: { email: payload.email },
         });
         if (!user) {
-            return res.status(422).json({
+            res.status(422).json({
+                message: "Invalid data",
                 errors: {
-                    email: "No Account found with this email.",
+                    email: "No Account found with this email!",
                 },
             });
+            return;
         }
-        // * Check token
-        if (payload.token !== user.password_reset_token) {
-            return res.status(422).json({
+        if (user.password_reset_token === null) {
+            res.status(422).json({
+                message: "Invalid data",
                 errors: {
-                    email: "Please make sure you are using correct url.",
+                    email: "Invalid token!",
                 },
             });
+            return;
         }
-        const hoursDiff = checkDateHourDifference(user.token_send_at);
-        if (hoursDiff > 2) {
-            return res.status(422).json({
+        const isTokenValid = await bcrypt.compare(payload.token, user.password_reset_token);
+        if (!isTokenValid) {
+            res.status(422).json({
+                message: "Invalid data",
                 errors: {
-                    email: "Password Reset token got expire.please send new token to reset password.",
+                    email: "Invalid token!",
                 },
             });
+            return;
         }
-        // * Update the password
+        const isTokenExpired = checkDateHourDifference(user.token_send_at);
+        if (isTokenExpired) {
+            res.status(422).json({
+                message: "Invalid data",
+                errors: {
+                    email: "Token has expired!",
+                },
+            });
+            return;
+        }
         const salt = await bcrypt.genSalt(10);
-        const newPass = await bcrypt.hash(payload.password, salt);
+        const hashedPassword = await bcrypt.hash(payload.password, salt);
         await prisma.user.update({
+            where: {
+                email: payload.email,
+            },
             data: {
-                password: newPass,
+                password: hashedPassword,
                 password_reset_token: null,
                 token_send_at: null,
             },
-            where: { email: payload.email },
         });
-        return res.json({
-            message: "Password reset successfully! please try to login now.",
+        res.json({
+            message: "Password reset successfully!",
         });
     }
     catch (error) {
         if (error instanceof ZodError) {
             const errors = formatError(error);
-            // Send a 422 response for validation errors
-            return res.status(422).json({ message: "Invalid data", errors });
+            res.status(422).json({ message: "Invalid data", errors });
+            return;
         }
-        // Send a 500 response for all other errors
-        return res.status(500).json({ message: "Something went wrong" });
+        res.status(500).json({ message: "Something went wrong" });
     }
 });
-router.get("/user", authMiddleware, async (req, res) => {
+router.get("/user", authMiddleware, (req, res) => {
     const user = req.user;
-    // await testQueue.add(testQueueName, user);
-    return res.json({ message: "Fetched", user });
+    res.json({ message: "Fetched", user });
+});
+router.get("/me", authMiddleware, (req, res) => {
+    const user = req.user;
+    res.json({ message: "Fetched", user });
 });
 export default router;
