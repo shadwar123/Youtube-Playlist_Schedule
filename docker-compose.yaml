@@ -5,16 +5,8 @@ services:
       dockerfile: docker/Dockerfile.frontend
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - NEXTAUTH_URL=http://localhost:3000
-      - REMOVED=das232%^$%%asdvhd98989
-      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - REMOVED=650157694564-mrvb66b4maabnfaiu6il5355hrkio9mu.apps.googleusercontent.com
-      - REMOVED=AIzaSyBjRg8CBkvUConHH20Ee6psfMoXIPdCCOU
-      - REMOVED=AIzaSyBRgTnD2LFQzZxZNJoyrep3Eckl1yOdEHA
-      - REMOVED=AIzaSyBHFyZx6uN_87YGA-jCzYb84F-D-qv4iYI
+    env_file:
+      - .env
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -28,9 +20,8 @@ services:
       dockerfile: docker/Dockerfile.server
     ports:
       - "8000:8000"
-    environment:
-      - NODE_ENV=development
-      - REMOVED=postgresql://postgres:postgres@db:5432/youtube_scheduler
+    env_file:
+      - .env
     volumes:
       - ./server:/app
       - /app/node_modules
@@ -42,12 +33,10 @@ services:
     image: postgres:16
     ports:
       - "5432:5432"
-    environment:
-      - REMOVED=postgres
-      - REMOVED=postgres
-      - REMOVED=youtube_scheduler
+    env_file:
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data: 
+  postgres_data:
