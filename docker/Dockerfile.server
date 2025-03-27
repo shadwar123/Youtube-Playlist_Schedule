@@ -1,0 +1,23 @@
+# Use Node.js LTS version
+FROM node:20
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY server/package*.json ./
+
+# Install dependencies and rebuild bcrypt
+RUN npm install && npm rebuild bcrypt --build-from-source
+
+# Copy the rest of the backend code
+COPY server/ .
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Start the application in development mode
+CMD ["npm", "run", "dev"] 
