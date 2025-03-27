@@ -1,0 +1,42 @@
+name: Build on PR
+
+on:
+  workflow_run:
+    workflows: ["Lint and Format"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          cd frontend && npm install
+          cd ../server && npm install
+
+      - name: Generate Prisma Client
+        run: |
+          cd server
+          npx prisma generate
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Build Backend
+        run: |
+          cd server
+          npm run build 
