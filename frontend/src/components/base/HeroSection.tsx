@@ -22,7 +22,7 @@ export default async function HeroSection() {
           YFSA
         </h1> */}
         <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-center">
-          Youtube Playlist Task Scheduler.
+          Youtube Playlist Task Scheduler
         </p>
         {session ? (
           <Link href="/dashboard">
