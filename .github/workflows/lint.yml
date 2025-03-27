@@ -1,0 +1,40 @@
+name: Lint and Format
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: |
+          cd frontend && npm install
+          cd ../server && npm install
+
+      - name: Run ESLint Frontend
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Run ESLint Backend
+        run: |
+          cd server
+          npm run lint
+
+      - name: Check Formatting
+        run: |
+          cd frontend
+          npx prettier --check .
+          cd ../server
+          npx prettier --check . 
