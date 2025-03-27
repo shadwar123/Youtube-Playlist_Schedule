@@ -3,11 +3,13 @@ import "dotenv/config";
 import * as path from "path";
 import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { job } from "./config/cron.js"; // Import cron job
 const app = express();
 const PORT = process.env.PORT || 7000;
 import Routes from "./routes/index.js";
 import { limiter } from './config/rateLimits.js';
 // *middleware
+job.start();
 // Enable trust proxy to correctly parse X-Forwarded-For header
 app.set('trust proxy', false);
 app.use(express.json());
