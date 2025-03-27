@@ -20,11 +20,11 @@ app.use(Routes);
 // * Set View engine
 app.set("view engine", "ejs");
 app.set("views", path.resolve(__dirname, "./views"));
-// app.get('/', async (req:Request, res:Response) => {
-//     const html = await ejs.renderFile( __dirname + `/views/emails/welcome.ejs`, {
-//         name : "shadwar Nayyar"
-//     })
-//     await sendMail("shadwarnayyar875@gmail.com", "Testing SMTP", html)
-//     return res.json({msg : "Email send succefully"})
-// });
+app.get('/', async (req, res) => {
+    // const html = await ejs.renderFile( __dirname + `/views/emails/welcome.ejs`, {
+    //     name : "shadwar Nayyar"
+    // })
+    // await sendMail("shadwarnayyar875@gmail.com", "Testing SMTP", html)
+    return res.json({ msg: "Email send succefully" });
+});
 app.listen(PORT, () => console.log(`Server is running on PORT ${PORT}`));

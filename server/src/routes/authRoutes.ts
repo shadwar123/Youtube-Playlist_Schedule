@@ -3,7 +3,7 @@ import { forgetPasswordSchema, loginSchema, registerSchema, resetPasswordSchema 
 import { ZodError } from "zod";
 import { checkDateHourDifference, formatError, renderEmailEjs } from "../helper.js";
 import prisma from "../config/database.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import {v4 as uuid4} from "uuid";
 import jwt from "jsonwebtoken";
 import { sendMail } from "../config/mail.js";

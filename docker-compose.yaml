@@ -1,0 +1,53 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=das232%^$%%asdvhd98989
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=650157694564-mrvb66b4maabnfaiu6il5355hrkio9mu.apps.googleusercontent.com
+      - NEXT_PUBLIC_GOOGLE_API_KEY=AIzaSyBjRg8CBkvUConHH20Ee6psfMoXIPdCCOU
+      - NEXT_PUBLIC_GEMINI_API_KEY=AIzaSyBRgTnD2LFQzZxZNJoyrep3Eckl1yOdEHA
+      - YOUTUBE_API_KEY=AIzaSyBHFyZx6uN_87YGA-jCzYb84F-D-qv4iYI
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.server
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/youtube_scheduler
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - /app/dist
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=youtube_scheduler
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data: 
