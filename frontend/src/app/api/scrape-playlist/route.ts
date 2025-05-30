@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 // import { v4 as uuidv4 } from "uuid";
 
-const REMOVED = process.env.REMOVED;
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const BASE_URL = "https://www.googleapis.com/youtube/v3";
 
 interface VideoData {
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Fetch playlist items in pages (YouTube API limits to 50 results per call)
     do {
       const playlistResponse = await fetch(
-        `${BASE_URL}/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${REMOVED}${nextPageToken ? `&pageToken=${nextPageToken}` : ""}`
+        `${BASE_URL}/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${YOUTUBE_API_KEY}${nextPageToken ? `&pageToken=${nextPageToken}` : ""}`
       );
       const playlistData = await playlistResponse.json();
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
       // Fetch video details (views, duration)
       const videoResponse = await fetch(
-        `${BASE_URL}/videos?part=contentDetails,statistics&id=${videoIds}&key=${REMOVED}`
+        `${BASE_URL}/videos?part=contentDetails,statistics&id=${videoIds}&key=${YOUTUBE_API_KEY}`
       );
       const videoData = await videoResponse.json();
 

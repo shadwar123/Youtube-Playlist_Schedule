@@ -15,8 +15,8 @@ export const AddEvent: React.FC<AddEventProps> = ({
   const [expiresIn, setExpiresIn] = useState<string | null>(null);
   const [isApiLoaded, setIsApiLoaded] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const CLIENT_ID = process.env.REMOVED || "";
-  const API_KEY = process.env.REMOVED || "";
+  const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+  const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "";
 
   const DISCOVERY_DOC =
     "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest";
