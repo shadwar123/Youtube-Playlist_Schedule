@@ -107,7 +107,7 @@ Day 2: [Video Title] — [Duration]`;
       const dayBlocks = data.text.split(/\n(?=Day \d+:)/);
       // \n(?=Day \d+:) => split at newline that is followed by "Day n:"
 
-      const extractedData = dayBlocks.map((block) => block.trim()); // remove extra spaces
+      const extractedData = dayBlocks.map((block:any) => block.trim()); // remove extra spaces
 
       console.log("extracted data", extractedData);
       console.log("extracted data", extractedData);
