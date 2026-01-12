@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   Card,
   CardContent,
@@ -23,9 +22,7 @@ interface VideoData {
 export default function Home() {
   const [playlistUrl, setPlaylistUrl] = useState("");
   const [videoData, setVideoData] = useState<VideoData[]>([]);
-  // const [isLoading, setIsLoading] = useState(false);
   const [totalLengthPlaylist, setTotalLengthPlaylist] = useState("");
-  // const [data, setData] = useState<string>("");
   const [arrayData, setArrayData] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [experienceLevel, setExperienceLevel] = useState<
@@ -35,104 +32,97 @@ export default function Home() {
   const [selectedTime, setSelectedTime] = useState<string>("");
 
   useEffect(() => {
-    console.log("data Generated content:", arrayData[0]);
+    console.log("Generated content:", arrayData);
   }, [arrayData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    console.log("data 1", loading);
+
     try {
       const response = await fetch("/api/scrape-playlist", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playlistUrl }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch playlist data");
-      }
+      if (!response.ok) throw new Error("Playlist fetch failed");
 
       const data = await response.json();
       setVideoData(data.videoList);
       setTotalLengthPlaylist(data.totalLengthPlaylist);
-      console.log("data videoList", data.videoList);
 
       setTimeout(() => {
         run(data.videoList);
       }, 1000);
     } catch (error) {
-      console.error("Error:", error);
+      console.error(error);
+      setLoading(false);
     }
   };
 
-  const run = async (videoData: VideoData[]): Promise<void> => {
-    console.log("inside run gemini");
-    setLoading(true); // Set loading to true before calling API
+  const run = async (videoData: VideoData[]) => {
+    setLoading(true);
 
     try {
-      const genAI = new GoogleGenerativeAI(
-        process.env.NEXT_PUBLIC_GEMINI_API_KEY || ""
-      );
+      const prompt = `I have a YouTube playlist with multiple video titles and their durations.
+My experience level is ${experienceLevel}, and I plan to learn for ${dailyLearningHours} hours each day.
 
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+Analyze the difficulty of each video based on its title (easy or hard).
 
-      // Construct the prompt using the playlist data, experience level, and daily learning hours
-      const prompt = `I have a YouTube playlist with multiple video titles and their durations. My experience level is ${experienceLevel}, and I plan to learn for ${dailyLearningHours} hours each day. 
-
-Analyze the difficulty of each video based on its title (easy or hard). For beginners, assume it will take longer to learn from harder videos. For intermediate learners, adjust the schedule to progress faster through easier topics.
-
-Here is the playlist data:
+Playlist data:
 ${JSON.stringify(
-  videoData.map((video) => ({
-    title: video.title,
-    vidLength: video.vidLength,
+  videoData.map((v) => ({
+    title: v.title,
+    vidLength: v.vidLength,
   })),
   null,
   2
 )}
 
-**Output the learning schedule only in the following format:**
+Output ONLY:
+Day 1: [Video Title] — [Duration]
+Day 2: [Video Title] — [Duration]`;
 
-Day 1: [Video Title] — [Duration]  
-Day 2: [Video Title] — [Duration]  
-...  
-Day n: [Video Title] — [Duration]  
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
 
-Ensure the total viewing time does not exceed my daily learning hours and adjust the schedule according to my experience level.
-`;
+      const data = await response.json();
 
-      const result = await model.generateContent(prompt);
+      if (!response.ok || typeof data.text !== "string") {
+        console.error("Gemini error:", data);
+        setLoading(false);
+        return;
+      }
+      console.log("data", data);
+      // const extractedData = data.text
+      //   .split("\n")
+      //   .map((line: string) => line.trim())
+      //   .filter((line: string) => line.startsWith("Day"));
 
-      // Assuming `result.response.text()` is the correct way to get the response
-      const generatedText: string = await result.response.text(); // Specify the type for generatedText
-      console.log("data generatedText", generatedText);
-      // Process the generated text to extract lines starting with "Day"
-      setTimeout(() => {
-        const extractedData = generatedText
-          .split("\n")
-          .map((line) => line.trim())
-          .filter((line) => line.startsWith("Day")); // Only process lines starting with "Day"
+      // Split the text into "Day n:" blocks
+      const dayBlocks = data.text.split(/\n(?=Day \d+:)/);
+      // \n(?=Day \d+:) => split at newline that is followed by "Day n:"
 
-        console.log("data extractedData", extractedData);
-        setArrayData(extractedData); // Update state
-        setLoading(false); // Set loading to false when done
-      }, 1000); // Process in chunks after slight delay
+      const extractedData = dayBlocks.map((block) => block.trim()); // remove extra spaces
+
+      console.log("extracted data", extractedData);
+      console.log("extracted data", extractedData);
+      setArrayData(extractedData);
     } catch (error) {
-      console.error("Error generating content:", error);
+      console.error("Gemini error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const formatViews = (views: number) => {
-    if (views >= 1000000) {
-      return `${(views / 1000000).toFixed(1)}M`;
-    } else if (views >= 1000) {
-      return `${(views / 1000).toFixed(1)}K`;
-    } else {
-      return views.toString();
-    }
+    if (views >= 1_000_000) return `${(views / 1_000_000).toFixed(1)}M`;
+    if (views >= 1_000) return `${(views / 1_000).toFixed(1)}K`;
+    return views.toString();
   };
 
   return (
@@ -236,7 +226,11 @@ Ensure the total viewing time does not exceed my daily learning hours and adjust
 
           <Card>
             <CardContent>
-              <AddEvent eventListData={arrayData} playlistUrl={playlistUrl} selectedTime={selectedTime} />
+              <AddEvent
+                eventListData={arrayData}
+                playlistUrl={playlistUrl}
+                selectedTime={selectedTime}
+              />
               <div>
                 {loading ? ( // Show loading state while data is being fetched/processed
                   <p>Loading...</p>
